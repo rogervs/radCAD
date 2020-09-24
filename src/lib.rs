@@ -1,6 +1,6 @@
 use pyo3::exceptions::TypeError;
 use pyo3::prelude::*;
-use pyo3::types::{IntoPyDict, PyDict, PyList, PyTuple};
+use pyo3::types::{IntoPyDict, PyString, PyDict, PyList, PyTuple};
 use pyo3::wrap_pyfunction;
 use std::convert::TryFrom;
 use std::collections::HashMap;
@@ -19,14 +19,14 @@ fn rad_cad(_py: Python, m: &PyModule) -> PyResult<()> {
 #[derive(Debug, Clone)]
 struct Model {
     initial_state: PyObject,
-    psubs: PyObject,
+    psubs: Vec<HashMap<String, HashMap<String, PyObject>>>,
     params: PyObject
 }
 
 #[pymethods]
 impl Model {
     #[new]
-    fn new(initial_state: PyObject, psubs: PyObject, params: PyObject) -> Self {
+    fn new(initial_state: PyObject, psubs: Vec<HashMap<String, HashMap<String, PyObject>>>, params: PyObject) -> Self {
         Model { initial_state, psubs, params }
     }
 }
@@ -61,7 +61,7 @@ fn run(
         let timesteps = simulation.timesteps;
         let runs = simulation.runs;
         let initial_state: &PyDict = simulation.model.initial_state.extract(py)?;
-        let psubs: &PyList = simulation.model.psubs.extract(py)?;
+        let psubs: &Vec<HashMap<String, HashMap<String, PyObject>>> = &simulation.model.psubs;
         let params: &PyDict = simulation.model.params.extract(py)?;
 
         let param_sweep = PyList::empty(py);
@@ -127,7 +127,7 @@ fn single_run(
     run: usize,
     subset: usize,
     initial_state: &PyDict,
-    psubs: &PyList,
+    psubs: &Vec<HashMap<String, HashMap<String, PyObject>>>,
     params: &PyDict,
 ) -> PyResult<PyObject> {
     let result: &PyList = PyList::empty(py);
@@ -157,32 +157,33 @@ fn single_run(
             };
             substate.set_item("substep", substep + 1).unwrap();
             for (state, function) in psub
-                .get_item("variables")
-                .expect("Get variables failed")
-                .cast_as::<PyDict>()
+                .get("variables")
                 .expect("Get variables failed")
             {
-                let state_update: &PyTuple = match function.is_callable() {
-                    true => function
-                        .call(
+                let state_update: &PyTuple = match function.cast_as::<PyAny>(py)?.is_callable() {
+                    true => {
+                        function
+                        .call(py,
                             (
                                 params,
                                 substep,
                                 result,
                                 substate,
                                 reduce_signals(
+                                    py,
                                     params,
                                     substep,
                                     result,
                                     substate,
-                                    psub.cast_as::<PyDict>()?,
+                                    psub,
                                 )
                                 .into_py_dict(py)
                                 .clone(),
                             ),
                             None,
                         )?
-                        .extract()?,
+                        .extract(py)?
+                    }
                     false => {
                         return Err(PyErr::new::<TypeError, _>(
                             "State update function is not callable",
@@ -191,7 +192,7 @@ fn single_run(
                 };
                 let state_key = state_update.get_item(0);
                 let state_value = state_update.get_item(1);
-                match state == state_key {
+                match PyString::new(py, state) == state_key.str()? {
                     true => substate.set_item(state_key, state_value).unwrap(),
                     false => {
                         return Err(PyErr::new::<TypeError, _>(
@@ -213,41 +214,40 @@ fn single_run(
 }
 
 fn reduce_signals(
+    py: Python,
     params: &PyDict,
     substep: usize,
     result: &PyList,
     substate: &PyDict,
-    psub: &PyDict,
-) -> HashMap<String, f64> {
-    let mut policy_results = Vec::<HashMap<String, f64>>::with_capacity(psub.len());
+    psub: &HashMap<String, HashMap<String, PyObject>>,
+) -> &PyDict {
+    let policy_results = PyList::empty(py);
     for (_var, function) in psub
-        .get_item("policies")
-        .expect("Get policies failed")
-        .cast_as::<PyDict>()
+        .get("policies")
         .expect("Get policies failed")
     {
-        policy_results.push(
+        policy_results.append(
             function
-                .call((params, substep, result, substate.copy().unwrap()), None)
+                .call(py, (params, substep, result, substate.copy().unwrap()), None)
                 .unwrap()
-                .extract()
+                .extract(py)
                 .unwrap(),
         );
     }
 
     match policy_results.len() {
-        0 => HashMap::new(),
-        1 => policy_results.last().unwrap().clone(),
+        0 => PyDict::new(py),
+        1 => policy_results.get_item(isize::try_from(policy_results.len() - 1).expect("Failed to fetch policy results")).extract::<&PyDict>().unwrap().clone(),
         _ => policy_results
-            .iter_mut()
-            .fold(HashMap::new(), |mut acc, a| {
-                for (key, value) in a {
-                    match acc.get_mut(&key.to_string()) {
+            .iter()
+            .fold(PyDict::new(py), |acc, a| {
+                for key in a.cast_as::<PyDict>().unwrap().keys() {
+                    match acc.get_item(key.to_string()) {
                         Some(value_) => {
-                            *value_ += *value;
+                            acc.set_item(key, value_ + a.get_item(key));
                         }
                         None => {
-                            acc.insert(key.to_string(), *value);
+                            acc.set_item(key, a.get_item(key));
                         }
                     }
                 }
