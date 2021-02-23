@@ -64,11 +64,16 @@ class Engine:
             from radcad.backends.multiprocessing import ExecutorMultiprocessing as Executor
         elif self.backend in [Backend.SINGLE_PROCESS]:
             from radcad.backends.single_process import ExecutorSingleProcess as Executor
+        elif self.backend in [Backend.GOLEM, Backend.GOLEM_REMOTE]:
+            if self.backend == Backend.GOLEM_REMOTE:
+                from radcad.extension.backends.golem import ExecutorGolemRemote as Executor
+            else:
+                from radcad.extensions.backends.golem import ExecutorGolem as Executor
         else:
             raise Exception(f"Execution backend must be one of {Backend._member_names_}, not {self.backend}")
-        
+
         result = Executor(self).execute_runs()
-        
+
         self.experiment.results, self.experiment.exceptions = extract_exceptions(result)
         self.experiment._after_experiment(experiment=self.experiment)
         return self.experiment.results
@@ -85,7 +90,7 @@ class Engine:
 
         for simulation_index, simulation in enumerate(simulations):
             simulation.index = simulation_index
-            
+
             timesteps = simulation.timesteps
             runs = simulation.runs
             initial_state = simulation.model.initial_state
