@@ -8,6 +8,8 @@ class Backend(Enum):
     RAY_REMOTE = 3
     PATHOS = 4
     SINGLE_PROCESS = 5
+    GOLEM = 6
+    GOLEM_REMOTE = 7
 
 class Executor(object):
     def __init__(self, engine):
