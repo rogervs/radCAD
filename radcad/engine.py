@@ -22,6 +22,7 @@ class Engine:
         self.drop_substeps = kwargs.pop("drop_substeps", False)
         self.run_generator = iter(())
 
+        # Check if GOLEM backend is selcted and parse values as needed
         if self.backend == Backend.GOLEM:
             try:
                 golem_conf = kwargs.pop("golem_conf")
@@ -34,6 +35,9 @@ class Engine:
                 self.golem_driver = golem_conf.pop('PAYMENT_DRIVER', 'zksync')
                 self.golem_network = golem_conf.pop('NETWORK', 'rinkeby')
                 self.golem_log_file = golem_conf.pop('LOG_FILE', 'radcad_golem.log')
+                self.golem_debug_activity = golem_conf.pop('DEBUG_ACTIVITY', 'True)
+                self.golem_debug_market = golem_conf.pop('DEBUG_MARKET', 'True')
+                self.golem_debug_payment = golem_conf.pop('DEBUG_PAYMENT', 'True')
                 try:
                     self.yagna_key = golem_conf.pop('YAGNA_KEY')
                 except KeyError:
