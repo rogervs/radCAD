@@ -30,6 +30,7 @@ class Engine:
                 raise KeyError("golem_conf dictionary is required when the GOLEM backend is selected")
             else:
                 self.golem_nodes = golem_conf.pop('NODES', 5)
+                self.golem_bundles = golem_conf.pop('BUNDLES', self.golem_nodes)
                 self.golem_budget = golem_conf.pop('BUDGET', 10)
                 self.golem_subnet_tag = golem_conf.pop('SUBNET_TAG', 'community.4')
                 self.golem_driver = golem_conf.pop('PAYMENT_DRIVER', 'zksync')
