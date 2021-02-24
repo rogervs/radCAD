@@ -29,11 +29,15 @@ class Engine:
                 raise KeyError("golem_conf dictionary is required when the GOLEM backend is selected")
             else:
                 self.golem_nodes = golem_conf.pop('NODES', 5)
-                self.golem_cost = golem_conf.pop('COST', 10)
+                self.golem_budget = golem_conf.pop('BUDGET', 10)
+                self.golem_subnet_tag = golem_conf.pop('SUBNET_TAG', 'community.4')
+                self.golem_driver = golem_conf.pop('PAYMENT_DRIVER', 'zksync')
+                self.golem_network = golem_conf.pop('NETWORK', 'rinkeby')
+                self.golem_log_file = golem_conf.pop('LOG_FILE', 'radcad_golem.log')
                 try:
                     self.yagna_key = golem_conf.pop('YAGNA_KEY')
                 except KeyError:
-                    raise KeyError("YAGNA_KEY missing from golem_conf dictionary")
+                    raise Exception("YAGNA_KEY missing from golem_conf dictionary")
 
         if kwargs:
             raise Exception(f"Invalid Engine option in {kwargs}")
