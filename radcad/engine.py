@@ -35,7 +35,7 @@ class Engine:
                 self.golem_subnet_tag = golem_conf.pop('SUBNET_TAG', 'community.4')
                 self.golem_driver = golem_conf.pop('PAYMENT_DRIVER', 'zksync')
                 self.golem_network = golem_conf.pop('NETWORK', 'rinkeby')
-                self.golem_timeout = golem_conf.pop('TIMEOUT', 2)_
+                self.golem_timeout = golem_conf.pop('TIMEOUT', 2),
                 self.golem_log_file = golem_conf.pop('LOG_FILE', 'radcad_golem.log')
                 self.golem_debug_activity = golem_conf.pop('DEBUG_ACTIVITY', 'True')
                 self.golem_debug_market = golem_conf.pop('DEBUG_MARKET', 'True')
