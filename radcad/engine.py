@@ -35,11 +35,11 @@ class Engine:
                 self.golem_driver = golem_conf.pop('PAYMENT_DRIVER', 'zksync')
                 self.golem_network = golem_conf.pop('NETWORK', 'rinkeby')
                 self.golem_log_file = golem_conf.pop('LOG_FILE', 'radcad_golem.log')
-                self.golem_debug_activity = golem_conf.pop('DEBUG_ACTIVITY', 'True)
+                self.golem_debug_activity = golem_conf.pop('DEBUG_ACTIVITY', 'True')
                 self.golem_debug_market = golem_conf.pop('DEBUG_MARKET', 'True')
                 self.golem_debug_payment = golem_conf.pop('DEBUG_PAYMENT', 'True')
                 try:
-                    self.yagna_key = golem_conf.pop('YAGNA_KEY')
+                    self.golem_yagna_key = golem_conf.pop('YAGNA_KEY')
                 except KeyError:
                     raise Exception("YAGNA_KEY missing from golem_conf dictionary")
 
