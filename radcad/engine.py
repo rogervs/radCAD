@@ -11,6 +11,7 @@ import copy
 # Get machine CPU count
 cpu_count = multiprocessing.cpu_count() - 1 or 1
 
+
 class Engine:
     def __init__(self, **kwargs):
         self.experiment = None
@@ -21,21 +22,35 @@ class Engine:
         self.drop_substeps = kwargs.pop("drop_substeps", False)
         self.run_generator = iter(())
 
+        if self.backend == Backend.GOLEM:
+            try:
+                golem_conf = kwargs.pop("golem_conf")
+            except KeyError:
+                raise KeyError("golem_conf dictionary is required when the GOLEM backend is selected")
+            else:
+                self.golem_nodes = golem_conf.pop('NODES', 5)
+                self.golem_cost = golem_conf.pop('COST', 10)
+                try:
+                    self.yagna_key = golem_conf.pop('YAGNA_KEY')
+                except KeyError:
+                    raise KeyError("YAGNA_KEY missing from golem_conf dictionary")
+
         if kwargs:
             raise Exception(f"Invalid Engine option in {kwargs}")
 
     def _run(self, experiment=None, **kwargs):
         if not experiment:
             raise Exception("Experiment required as argument")
-        self.experiment = experiment
+        self.experiment=experiment
 
         if kwargs:
             raise Exception(f"Invalid Engine option in {kwargs}")
 
-        simulations = experiment.simulations
+        simulations=experiment.simulations
         if not isinstance(self.backend, Backend):
-            raise Exception(f"Execution backend must be one of {Backend.list()}")
-        configs = [
+            raise Exception(
+                f"Execution backend must be one of {Backend.list()}")
+        configs=[
             (
                 sim.model.initial_state,
                 sim.model.state_update_blocks,
@@ -46,11 +61,11 @@ class Engine:
             for sim in simulations
         ]
 
-        result = []
+        result=[]
 
         self.experiment._before_experiment(experiment=self.experiment)
 
-        self.run_generator = self._run_stream(configs)
+        self.run_generator=self._run_stream(configs)
 
         # Select backend executor
         if self.backend in [Backend.RAY, Backend.RAY_REMOTE]:
@@ -66,37 +81,40 @@ class Engine:
             from radcad.backends.single_process import ExecutorSingleProcess as Executor
         elif self.backend in [Backend.GOLEM, Backend.GOLEM_REMOTE]:
             if self.backend == Backend.GOLEM_REMOTE:
-                from radcad.extension.backends.golem import ExecutorGolemRemote as Executor
+                from radcad.extensions.backends.golem import ExecutorGolemRemote as Executor
             else:
                 from radcad.extensions.backends.golem import ExecutorGolem as Executor
         else:
-            raise Exception(f"Execution backend must be one of {Backend._member_names_}, not {self.backend}")
+            raise Exception(
+                f"Execution backend must be one of {Backend._member_names_}, not {self.backend}")
 
-        result = Executor(self).execute_runs()
+        result=Executor(self).execute_runs()
 
-        self.experiment.results, self.experiment.exceptions = extract_exceptions(result)
+        # self.experiment.results, self.experiment.exceptions = extract_exceptions(result)
+        self.experiment.results=result
         self.experiment._after_experiment(experiment=self.experiment)
         return self.experiment.results
 
     def _get_simulation_from_config(config):
-        states, state_update_blocks, params, timesteps, runs = config
-        model = wrappers.Model(
+        states, state_update_blocks, params, timesteps, runs=config
+        model=wrappers.Model(
             initial_state=states, state_update_blocks=state_update_blocks, params=params
         )
         return wrappers.Simulation(model=model, timesteps=timesteps, runs=runs)
 
     def _run_stream(self, configs):
-        simulations = [Engine._get_simulation_from_config(config) for config in configs]
+        simulations=[Engine._get_simulation_from_config(
+            config) for config in configs]
 
         for simulation_index, simulation in enumerate(simulations):
-            simulation.index = simulation_index
+            simulation.index=simulation_index
 
-            timesteps = simulation.timesteps
-            runs = simulation.runs
-            initial_state = simulation.model.initial_state
-            state_update_blocks = simulation.model.state_update_blocks
-            params = simulation.model.params
-            param_sweep = core.generate_parameter_sweep(params)
+            timesteps=simulation.timesteps
+            runs=simulation.runs
+            initial_state=simulation.model.initial_state
+            state_update_blocks=simulation.model.state_update_blocks
+            params=simulation.model.params
+            param_sweep=core.generate_parameter_sweep(params)
 
             self.experiment._before_simulation(
                 simulation=simulation
@@ -105,7 +123,7 @@ class Engine:
             # NOTE Hook allows mutation of RunArgs
             for run_index in range(0, runs):
                 if param_sweep:
-                    context = wrappers.Context(
+                    context=wrappers.Context(
                         simulation_index,
                         run_index,
                         None,
@@ -115,7 +133,7 @@ class Engine:
                     )
                     self.experiment._before_run(context=context)
                     for subset_index, param_set in enumerate(param_sweep):
-                        context = wrappers.Context(
+                        context=wrappers.Context(
                             simulation_index,
                             run_index,
                             subset_index,
@@ -138,7 +156,7 @@ class Engine:
                         self.experiment._after_subset(context=context)
                     self.experiment._before_run(context=context)
                 else:
-                    context = wrappers.Context(
+                    context=wrappers.Context(
                         simulation_index,
                         run_index,
                         0,
