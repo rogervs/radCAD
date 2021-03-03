@@ -40,27 +40,16 @@ script_dir = pathlib.Path(__file__).resolve().parent
 pickle_dir = script_dir / 'pickles'
 
 
-class ExecutorGolemRemote(Executor):
+def golem_remote_loader():
+    print("Golem Remote")
 
-    def execute_runs(self):
-        print("Golem Remote")
+    pickle_files = pickle_dir.glob('*.pickle')
+    pickle_file = list(pickle_files)[0]
+    print(pickle_file)
 
-        pickle_files = pickle_dir.glob('*.pickle')
-        pickle_file = list(pickle_files)[0]
-        print(pickle_file)
+    configs = dill.load(pickle_file.open('rb'))
 
-        configs = dill.load(pickle_file.open('rb'))
-
-        print(configs)
-
-
-
-
-#         result = [
-#             core._single_run_wrapper((config, True))
-#             for config in configs
-#         ]
-#         return result
+    return configs
 
 
 class ExecutorGolem(Executor):
