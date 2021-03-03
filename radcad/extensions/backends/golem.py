@@ -41,15 +41,17 @@ pickle_dir = script_dir / 'pickles'
 
 
 def golem_remote_loader():
-    print("Golem Remote")
-
     pickle_files = pickle_dir.glob('*.pickle')
     pickle_file = list(pickle_files)[0]
-    print(pickle_file)
 
     configs = dill.load(pickle_file.open('rb'))
 
     return configs
+
+
+def golem_remote_pickler(result):
+
+
 
 
 class ExecutorGolem(Executor):
