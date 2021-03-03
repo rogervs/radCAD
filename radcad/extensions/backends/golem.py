@@ -38,9 +38,11 @@ sys.path.append(str(examples_dir))
 
 script_dir = pathlib.Path(__file__).resolve().parent
 pickle_dir = script_dir / 'pickles'
+pickle_file = None
 
 
 def golem_remote_loader():
+    global pickle_file
     pickle_files = pickle_dir.glob('*.pickle')
     pickle_file = list(pickle_files)[0]
 
@@ -50,8 +52,12 @@ def golem_remote_loader():
 
 
 def golem_remote_pickler(result):
-
-
+    print(pickle_file)
+    filename = pickle_file.with_suffix('.procd.pickle')
+    print(filename)
+    dill_out = filename.open("wb")
+    dill.dump(result, dill_out)
+    dill_out.close()
 
 
 class ExecutorGolem(Executor):
