@@ -56,7 +56,7 @@ class ExecutorGolem(Executor):
 
     async def main(self):
         package = await vm.repo(
-            image_hash="77e806cde851a8e0315892d341903492e4e69f29359232fb25e5a31d",
+            image_hash="d7bd9c127ecebd608334d3ed6257402d56b4f5551a7fa09513802350",
             min_mem_gib=0.5,
             min_storage_gib=2.0,
         )
@@ -67,20 +67,21 @@ class ExecutorGolem(Executor):
             async for task in tasks:
 
                 input_file = str(task.data)
-                print(input_file)
 
                 ctx.send_file(input_file, remote_pickle_in)
+
                 ctx.send_json(
                     "/golem/work/params.json",
                     {
                         "backend": self.engine.golem_backend,
                     },
                 )
+
                 ctx.run("/usr/bin/sh",  "-c",
-                        "mv /golem/resource/radcad.prep /golem/output/radcad.output")
+                        "python3 /golem/work/radcad_remote_agent.py")
 #
 #                 ctx.run("/golem/entrypoints/run-blender.sh")
-                output_file = f"{input_file}.out"
+                output_file = f"{input_file}.procd"
                 print(output_file)
                 ctx.download_file(
                     "/golem/output/radcad.output", output_file)
