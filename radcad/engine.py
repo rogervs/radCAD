@@ -21,7 +21,9 @@ class Engine:
         self.deepcopy = kwargs.pop("deepcopy", True)
         self.drop_substeps = kwargs.pop("drop_substeps", False)
         self.return_result = kwargs.pop("return_result", True)
+        self.pre_gen_runs = kwargs.pop("pre_gen_runs", None)
         self.run_generator = iter(())
+
 
 
         # Check if GOLEM backend is selcted and parse values as needed
@@ -78,7 +80,10 @@ class Engine:
 
         self.experiment._before_experiment(experiment=self.experiment)
 
-        self.run_generator = self._run_stream(configs)
+        if self.pre_gen_runs:
+            self.run_generator = iter(self.pre_gen_runs)
+        else:
+            self.run_generator = self._run_stream(configs)
 
         # Select backend executor
         if self.backend in [Backend.RAY, Backend.RAY_REMOTE]:
