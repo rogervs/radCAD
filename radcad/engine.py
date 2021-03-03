@@ -33,7 +33,7 @@ class Engine:
                 raise KeyError("golem_conf dictionary is required when the GOLEM backend is selected")
             else:
                 self.golem_nodes = golem_conf.pop('NODES', 5)
-                self.golem_mode = golem_conf.pop('REMOTE_MODE', 'SINGLE_PROCESS'),
+                self.golem_backend = golem_conf.pop('REMOTE_BACKEND', Backend.SINGLE_PROCESS),
                 self.golem_bundles = golem_conf.pop('BUNDLES', self.golem_nodes)
                 self.golem_budget = golem_conf.pop('BUDGET', 10)
                 self.golem_subnet_tag = golem_conf.pop('SUBNET_TAG', 'community.4')

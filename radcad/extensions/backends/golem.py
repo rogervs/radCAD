@@ -69,7 +69,13 @@ class ExecutorGolem(Executor):
                 input_file = str(task.data)
                 print(input_file)
 
-                ctx.send_file(input_file, "/golem/resource/radcad.prep")
+                ctx.send_file(input_file, remote_pickle_in)
+                ctx.send_json(
+                    "/golem/work/params.json",
+                    {
+                        "backend": self.engine.golem_backend,
+                    },
+                )
                 ctx.run("/usr/bin/sh",  "-c",
                         "mv /golem/resource/radcad.prep /golem/output/radcad.output")
 #
