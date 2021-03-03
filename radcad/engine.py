@@ -20,7 +20,9 @@ class Engine:
         self.raise_exceptions = kwargs.pop("raise_exceptions", True)
         self.deepcopy = kwargs.pop("deepcopy", True)
         self.drop_substeps = kwargs.pop("drop_substeps", False)
+        self.return_result = kwargs.pop("return_result", True)
         self.run_generator = iter(())
+
 
         # Check if GOLEM backend is selcted and parse values as needed
         if self.backend == Backend.GOLEM:
@@ -30,6 +32,7 @@ class Engine:
                 raise KeyError("golem_conf dictionary is required when the GOLEM backend is selected")
             else:
                 self.golem_nodes = golem_conf.pop('NODES', 5)
+                self.golem_mode = golem_conf.pop('REMOTE_MODE', 'SINGLE_PROCESS'),
                 self.golem_bundles = golem_conf.pop('BUNDLES', self.golem_nodes)
                 self.golem_budget = golem_conf.pop('BUDGET', 10)
                 self.golem_subnet_tag = golem_conf.pop('SUBNET_TAG', 'community.4')
@@ -71,11 +74,11 @@ class Engine:
             for sim in simulations
         ]
 
-        result=[]
+        result = []
 
         self.experiment._before_experiment(experiment=self.experiment)
 
-        self.run_generator=self._run_stream(configs)
+        self.run_generator = self._run_stream(configs)
 
         # Select backend executor
         if self.backend in [Backend.RAY, Backend.RAY_REMOTE]:
@@ -89,21 +92,18 @@ class Engine:
             from radcad.backends.multiprocessing import ExecutorMultiprocessing as Executor
         elif self.backend in [Backend.SINGLE_PROCESS]:
             from radcad.backends.single_process import ExecutorSingleProcess as Executor
-        elif self.backend in [Backend.GOLEM, Backend.GOLEM_REMOTE]:
-            if self.backend == Backend.GOLEM_REMOTE:
-                from radcad.extensions.backends.golem import ExecutorGolemRemote as Executor
-            else:
-                from radcad.extensions.backends.golem import ExecutorGolem as Executor
+        elif self.backend in [Backend.GOLEM]:
+            from radcad.extensions.backends.golem import ExecutorGolem as Executor
         else:
             raise Exception(
                 f"Execution backend must be one of {Backend._member_names_}, not {self.backend}")
 
         result=Executor(self).execute_runs()
 
-        self.experiment.results, self.experiment.exceptions = extract_exceptions(result)
-        #self.experiment.results=result
-        self.experiment._after_experiment(experiment=self.experiment)
-        return self.experiment.results
+        if self.return_result:
+            self.experiment.results, self.experiment.exceptions = extract_exceptions(result)
+            self.experiment._after_experiment(experiment=self.experiment)
+            return self.experiment.results
 
     def _get_simulation_from_config(config):
         states, state_update_blocks, params, timesteps, runs=config

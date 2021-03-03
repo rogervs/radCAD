@@ -44,17 +44,23 @@ class ExecutorGolemRemote(Executor):
 
     def execute_runs(self):
         print("Golem Remote")
+
+        pickle_files = pickle_dir.glob('*.pickle')
+        pickle_file = list(pickle_files)[0]
+        print(pickle_file)
+
+        configs = dill.load(pickle_file.open('rb'))
+
+        print(configs)
+
+
+
+
 #         result = [
-#             core._single_run_wrapper((config, self.engine.raise_exceptions))
-#             for config in self.engine.run_generator
+#             core._single_run_wrapper((config, True))
+#             for config in configs
 #         ]
 #         return result
-
-        # result = [
-        #     core._single_run_wrapper((config, self.engine.raise_exceptions))
-        #     for config in self.engine.run_generator
-        # ]
-        # return result
 
 
 class ExecutorGolem(Executor):
@@ -66,14 +72,19 @@ class ExecutorGolem(Executor):
             min_storage_gib=2.0,
         )
 
+        print("Initiating ExecutorGolem")
+
         async def worker(ctx: WorkContext, tasks):
             async for task in tasks:
 
                 input_file = str(task.data)
+                print(input_file)
 
                 ctx.send_file(input_file, "/golem/resource/radcad.prep")
-                ctx.run("/usr/bin/sh",  "-c",  "mv /golem/resource/radcad.prep /golem/output/radcad.output")
+                ctx.run("/usr/bin/sh",  "-c",
+                        "mv /golem/resource/radcad.prep /golem/output/radcad.output")
 #
+#                 ctx.run("/golem/entrypoints/run-blender.sh")
                 output_file = f"{input_file}.out"
                 print(output_file)
                 ctx.download_file(
@@ -172,7 +183,6 @@ class ExecutorGolem(Executor):
             dill_out = filename.open("wb")
             dill.dump(bundles[bundle], dill_out)
             dill_out.close()
-
 
         # This is only required when running on Windows with Python prior to 3.8:
         windows_event_loop_fix()
