@@ -32,30 +32,22 @@ from radcad.utils import (
     TEXT_COLOR_YELLOW,
 )
 
-examples_dir = pathlib.Path(__file__).resolve().parent.parent
-sys.path.append(str(examples_dir))
-
 
 script_dir = pathlib.Path(__file__).resolve().parent
 pickle_dir = script_dir / 'pickles'
-pickle_file = None
+
+remote_pickle_in = pathlib.Path('/golem/resource/radcad.prep')
+remote_pickle_out = pathlib.Path('/golem/output/radcad.output')
 
 
 def golem_remote_loader():
-    global pickle_file
-    pickle_files = pickle_dir.glob('*.pickle')
-    pickle_file = list(pickle_files)[0]
-
-    configs = dill.load(pickle_file.open('rb'))
+    configs = dill.load(remote_pickle_in.open('rb'))
 
     return configs
 
 
 def golem_remote_pickler(result):
-    print(pickle_file)
-    filename = pickle_file.with_suffix('.procd.pickle')
-    print(filename)
-    dill_out = filename.open("wb")
+    dill_out = remote_pickle_out.open("wb")
     dill.dump(result, dill_out)
     dill_out.close()
 
