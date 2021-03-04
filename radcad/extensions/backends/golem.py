@@ -39,6 +39,12 @@ pickle_dir = script_dir / 'pickles'
 remote_pickle_in = pathlib.Path('/golem/resource/radcad.prep')
 remote_pickle_out = pathlib.Path('/golem/output/radcad.output')
 
+exec_file = script_dir / 'run-golem-diplomat.sh'
+golem_remote_file = script_dir / 'radcad_remote_agent.py'
+
+
+output_files = []
+
 
 def golem_remote_loader():
     configs = dill.load(remote_pickle_in.open('rb'))
@@ -56,12 +62,10 @@ class ExecutorGolem(Executor):
 
     async def main(self):
         package = await vm.repo(
-            image_hash="d7bd9c127ecebd608334d3ed6257402d56b4f5551a7fa09513802350",
+            image_hash="0c5755a81c681e16566d5088a5bc61822e7601ea84936c52c4ceba05",
             min_mem_gib=0.5,
             min_storage_gib=2.0,
         )
-
-        print("Initiating ExecutorGolem")
 
         async def worker(ctx: WorkContext, tasks):
             async for task in tasks:
@@ -69,29 +73,31 @@ class ExecutorGolem(Executor):
                 input_file = str(task.data)
 
                 ctx.send_file(input_file, remote_pickle_in)
+                ctx.send_file(exec_file, '/golem/work/run-golem-diplomat.sh')
+                ctx.send_file(golem_remote_file,
+                              '/golem/work/radcad_remote_agent.py')
 
                 ctx.send_json(
                     "/golem/work/params.json",
                     {
-                        "backend": self.engine.golem_backend,
+                        "backend": self.engine.golem_backend[0],
                     },
                 )
 
-                ctx.run("/usr/bin/sh",  "-c",
-                        "python3 /golem/work/radcad_remote_agent.py")
-#
-#                 ctx.run("/golem/entrypoints/run-blender.sh")
+                ctx.run("/usr/bin/sh", "-c",
+                        "chmod u+x /golem/work/run-golem-diplomat.sh")
+                ctx.run("/golem/work/run-golem-diplomat.sh")
+
                 output_file = f"{input_file}.procd"
-                print(output_file)
-                ctx.download_file(
-                    "/golem/output/radcad.output", output_file)
-#
+                output_files.append(pathlib.Path(output_file))
+                ctx.download_file(remote_pickle_out, output_file)
+
                 try:
-                    # Set timeout for executing the script on the provider. Two minutes is plenty
-                    # of time for computing a single frame, for other tasks it may be not enough.
-                    # If the timeout is exceeded, this worker instance will be shut down and all
-                    # remaining tasks, including the current one, will be computed by other providers.
-                    yield ctx.commit(timeout=timedelta(seconds=120))
+                    # If the timeout is exceeded, this worker instance will
+                    # be shut down and all remaining tasks, including the
+                    # current one, will be computed by other providers.
+                    yield ctx.commit(timeout=timedelta(seconds=self.engine.golem_timeout * 60))
+
                     # TODO: Check if job results are valid
                     # and reject by: task.reject_task(reason = 'invalid file')
                     task.accept_result(result=output_file)
@@ -103,12 +109,12 @@ class ExecutorGolem(Executor):
                     )
                     raise
 
-        # Worst-case overhead, in minutes, for initialization (negotiation, file transfer etc.)
-        # TODO: make this dynamic, e.g. depending on the size of files to transfer
+        # Worst-case overhead, in minutes, for initialization
+        # (negotiation, file transfer etc.)
         init_overhead = 3
-        # Providers will not accept work if the timeout is outside of the [5 min, 30min] range.
-        # We increase the lower bound to 6 min to account for the time needed for our demand to
-        # reach the providers.
+        # Providers will not accept work if the timeout is outside of the
+        # [5 min, 30min] range.  We increase the lower bound to 6 min to
+        # account for the time needed for our demand to reach the providers.
         min_timeout, max_timeout = 6, 30
 
         timeout = timedelta(minutes=max(min(
@@ -118,8 +124,6 @@ class ExecutorGolem(Executor):
         # By passing `event_consumer=log_summary()` we enable summary logging.
         # See the documentation of the `yapapi.log` module on how to set
         # the level of detail and format of the logged information.
-        print("Max workers", self.engine.golem_nodes)
-        print("Budget :", self.engine.golem_budget)
 
         async with g_Executor(
             package=package,
@@ -225,3 +229,8 @@ class ExecutorGolem(Executor):
                 )
             except (asyncio.CancelledError, KeyboardInterrupt):
                 pass
+        else:
+            results = []
+            for result_file in output_files:
+                results.extend(dill.load(result_file.open('rb')))
+            return results

@@ -33,13 +33,13 @@ class Engine:
                 raise KeyError("golem_conf dictionary is required when the GOLEM backend is selected")
             else:
                 self.golem_nodes = golem_conf.pop('NODES', 5)
-                self.golem_backend = golem_conf.pop('REMOTE_BACKEND', Backend.SINGLE_PROCESS),
+                self.golem_backend = golem_conf.pop('REMOTE_BACKEND', Backend.SINGLE_PROCESS).value,
                 self.golem_bundles = golem_conf.pop('BUNDLES', self.golem_nodes)
                 self.golem_budget = golem_conf.pop('BUDGET', 10)
                 self.golem_subnet_tag = golem_conf.pop('SUBNET_TAG', 'community.4')
                 self.golem_driver = golem_conf.pop('PAYMENT_DRIVER', 'zksync')
                 self.golem_network = golem_conf.pop('NETWORK', 'rinkeby')
-                self.golem_timeout = golem_conf.pop('TIMEOUT', 8)
+                self.golem_timeout = golem_conf.pop('TIMEOUT', 2)
                 self.golem_log_file = golem_conf.pop('LOG_FILE', 'radcad_golem.log')
                 self.golem_debug_activity = golem_conf.pop('DEBUG_ACTIVITY', 'True')
                 self.golem_debug_market = golem_conf.pop('DEBUG_MARKET', 'True')
@@ -104,9 +104,10 @@ class Engine:
 
         result=Executor(self).execute_runs()
 
-        self.experiment.results, self.experiment.exceptions = extract_exceptions(result)
-        self.experiment._after_experiment(experiment=self.experiment)
-        return self.experiment.results
+#         self.experiment.results, self.experiment.exceptions = extract_exceptions(result)
+#         self.experiment._after_experiment(experiment=self.experiment)
+#         return self.experiment.results
+        return result
 
     def _get_simulation_from_config(config):
         states, state_update_blocks, params, timesteps, runs=config
