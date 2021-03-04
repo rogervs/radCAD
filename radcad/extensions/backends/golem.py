@@ -73,7 +73,6 @@ class ExecutorGolem(Executor):
                 input_file = str(task.data)
 
                 ctx.send_file(input_file, remote_pickle_in)
-                ctx.send_file(exec_file, '/golem/work/run-golem-diplomat.sh')
                 ctx.send_file(golem_remote_file,
                               '/golem/work/radcad_remote_agent.py')
 
@@ -84,13 +83,12 @@ class ExecutorGolem(Executor):
                     },
                 )
 
-                ctx.run("/usr/bin/sh", "-c",
-                        "chmod u+x /golem/work/run-golem-diplomat.sh")
-                ctx.run("/golem/work/run-golem-diplomat.sh")
+                ctx.run("/usr/bin/sh", "-c", "python3 radcad_remote_agent.py")
 
                 output_file = f"{input_file}.procd"
                 output_files.append(pathlib.Path(output_file))
                 ctx.download_file(remote_pickle_out, output_file)
+#                 ctx.download_file('/golem/output/sh.log', output_file)
 
                 try:
                     # If the timeout is exceeded, this worker instance will

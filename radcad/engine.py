@@ -18,6 +18,7 @@ class Engine:
         self.processes = kwargs.pop("processes", cpu_count)
         self.backend = kwargs.pop("backend", Backend.DEFAULT)
         self.raise_exceptions = kwargs.pop("raise_exceptions", True)
+        self.process_exceptions = kwargs.pop("process_exceptions", True)
         self.deepcopy = kwargs.pop("deepcopy", True)
         self.drop_substeps = kwargs.pop("drop_substeps", False)
         self.pre_gen_runs = kwargs.pop("pre_gen_runs", None)
@@ -104,9 +105,12 @@ class Engine:
 
         result=Executor(self).execute_runs()
 
-        self.experiment.results, self.experiment.exceptions = extract_exceptions(result)
-        self.experiment._after_experiment(experiment=self.experiment)
-        return self.experiment.results
+        if self.process_exceptions:
+            self.experiment.results, self.experiment.exceptions = extract_exceptions(result)
+            self.experiment._after_experiment(experiment=self.experiment)
+            return self.experiment.results
+        else:
+            return result
 
     def _get_simulation_from_config(config):
         states, state_update_blocks, params, timesteps, runs=config
