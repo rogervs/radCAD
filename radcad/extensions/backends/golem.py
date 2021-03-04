@@ -75,20 +75,32 @@ class ExecutorGolem(Executor):
                 ctx.send_file(input_file, remote_pickle_in)
                 ctx.send_file(golem_remote_file,
                               '/golem/work/radcad_remote_agent.py')
+                ctx.send_file(exec_file,
+                              '/golem/work/run-golem-diplomat.sh')
+                ctx.run("/usr/bin/chmod", "u+x", "/golem/work/run-golem-diplomat.sh")
 
                 ctx.send_json(
                     "/golem/work/params.json",
                     {
                         "backend": self.engine.golem_backend[0],
+                        "process_exceptions": self.engine.process_exceptions,
+                        "raise_exceptions": self.engine.raise_exceptions,
+                        "deepcopy": self.engine.deepcopy,
+                        "drop_substeps": self.engine.drop_substeps
                     },
                 )
 
-                ctx.run("/usr/bin/sh", "-c", "python3 radcad_remote_agent.py")
+#                 ctx.run("/usr/bin/sh", "-c", "python3 /golem/work/radcad_remote_agent.py")
+#                 ctx.run("/usr/bin/sh", "-c", "ls -alh /golem/work > /golem/output/sh.log")
+                ctx.run("/usr/bin/sh", "-c", "/golem/work/run-golem-diplomat.sh")
 
-                output_file = f"{input_file}.procd"
-                output_files.append(pathlib.Path(output_file))
-                ctx.download_file(remote_pickle_out, output_file)
-#                 ctx.download_file('/golem/output/sh.log', output_file)
+                output_file = pathlib.Path(f"{input_file}.procd")
+                log_file = output_file.with_suffix(".log")
+                json_file = output_file.with_suffix(".json")
+                output_files.append(output_file)
+ #                ctx.download_file(remote_pickle_out, output_file)
+                ctx.download_file('/golem/output/sh.log', log_file)
+                ctx.download_file('/golem/work/params.json', json_file)
 
                 try:
                     # If the timeout is exceeded, this worker instance will
@@ -98,7 +110,8 @@ class ExecutorGolem(Executor):
 
                     # TODO: Check if job results are valid
                     # and reject by: task.reject_task(reason = 'invalid file')
-                    task.accept_result(result=output_file)
+#                    task.accept_result(result=output_file)
+                    task.accept_result(result=log_file)
                 except BatchTimeoutError:
                     print(
                         f"{TEXT_COLOR_RED}"
