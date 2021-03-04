@@ -104,10 +104,9 @@ class Engine:
 
         result=Executor(self).execute_runs()
 
-#         self.experiment.results, self.experiment.exceptions = extract_exceptions(result)
-#         self.experiment._after_experiment(experiment=self.experiment)
-#         return self.experiment.results
-        return result
+        self.experiment.results, self.experiment.exceptions = extract_exceptions(result)
+        self.experiment._after_experiment(experiment=self.experiment)
+        return self.experiment.results
 
     def _get_simulation_from_config(config):
         states, state_update_blocks, params, timesteps, runs=config
