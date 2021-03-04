@@ -62,7 +62,7 @@ class ExecutorGolem(Executor):
 
     async def main(self):
         package = await vm.repo(
-            image_hash="0c5755a81c681e16566d5088a5bc61822e7601ea84936c52c4ceba05",
+            image_hash="086376ab1d5b7e9c2ae4026d2bea5ea6e612c31a6fcc24cc347c726a",
             min_mem_gib=0.5,
             min_storage_gib=2.0,
         )
@@ -75,9 +75,6 @@ class ExecutorGolem(Executor):
                 ctx.send_file(input_file, remote_pickle_in)
                 ctx.send_file(golem_remote_file,
                               '/golem/work/radcad_remote_agent.py')
-                ctx.send_file(exec_file,
-                              '/golem/work/run-golem-diplomat.sh')
-                ctx.run("/usr/bin/chmod", "u+x", "/golem/work/run-golem-diplomat.sh")
 
                 ctx.send_json(
                     "/golem/work/params.json",
@@ -90,17 +87,11 @@ class ExecutorGolem(Executor):
                     },
                 )
 
-#                 ctx.run("/usr/bin/sh", "-c", "python3 /golem/work/radcad_remote_agent.py")
-#                 ctx.run("/usr/bin/sh", "-c", "ls -alh /golem/work > /golem/output/sh.log")
-                ctx.run("/usr/bin/sh", "-c", "/golem/work/run-golem-diplomat.sh")
+                ctx.run("/usr/bin/sh", "-c", "python3 /golem/work/radcad_remote_agent.py")
 
                 output_file = pathlib.Path(f"{input_file}.procd")
-                log_file = output_file.with_suffix(".log")
-                json_file = output_file.with_suffix(".json")
                 output_files.append(output_file)
- #                ctx.download_file(remote_pickle_out, output_file)
-                ctx.download_file('/golem/output/sh.log', log_file)
-                ctx.download_file('/golem/work/params.json', json_file)
+                ctx.download_file(remote_pickle_out, output_file)
 
                 try:
                     # If the timeout is exceeded, this worker instance will
@@ -110,8 +101,8 @@ class ExecutorGolem(Executor):
 
                     # TODO: Check if job results are valid
                     # and reject by: task.reject_task(reason = 'invalid file')
-#                    task.accept_result(result=output_file)
-                    task.accept_result(result=log_file)
+                    task.accept_result(result=output_file)
+#                    task.accept_result(result=log_file)
                 except BatchTimeoutError:
                     print(
                         f"{TEXT_COLOR_RED}"
