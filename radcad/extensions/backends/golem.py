@@ -32,15 +32,14 @@ from radcad.utils import (
     TEXT_COLOR_YELLOW,
 )
 
-
 script_dir = pathlib.Path(__file__).resolve().parent
-pickle_dir = script_dir / 'pickles'
+pickle_dir = script_dir / 'golem/pickles'
 
 remote_pickle_in = pathlib.Path('/golem/resource/radcad.prep')
 remote_pickle_out = pathlib.Path('/golem/output/radcad.output')
 
-exec_file = script_dir / 'run-golem-diplomat.sh'
-golem_remote_file = script_dir / 'radcad_remote_agent.py'
+golem_exec_local = script_dir / 'golem/radcad_remote_agent.py'
+golem_exec_remote = '/golem/work/radcad_remote_agent.py'
 
 
 output_files = []
@@ -73,8 +72,7 @@ class ExecutorGolem(Executor):
                 input_file = str(task.data)
 
                 ctx.send_file(input_file, remote_pickle_in)
-                ctx.send_file(golem_remote_file,
-                              '/golem/work/radcad_remote_agent.py')
+                ctx.send_file(golem_exec_local, golem_exec_remote)
 
                 ctx.send_json(
                     "/golem/work/params.json",

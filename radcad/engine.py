@@ -42,9 +42,9 @@ class Engine:
                 self.golem_network = golem_conf.pop('NETWORK', 'rinkeby')
                 self.golem_timeout = golem_conf.pop('TIMEOUT', 2)
                 self.golem_log_file = golem_conf.pop('LOG_FILE', 'radcad_golem.log')
-                self.golem_debug_activity = golem_conf.pop('DEBUG_ACTIVITY', 'True')
-                self.golem_debug_market = golem_conf.pop('DEBUG_MARKET', 'True')
-                self.golem_debug_payment = golem_conf.pop('DEBUG_PAYMENT', 'True')
+                self.golem_debug_activity = golem_conf.pop('DEBUG_ACTIVITY', False)
+                self.golem_debug_market = golem_conf.pop('DEBUG_MARKET', False)
+                self.golem_debug_payment = golem_conf.pop('DEBUG_PAYMENT', False)
                 try:
                     self.golem_yagna_key = golem_conf.pop('YAGNA_KEY')
                 except KeyError:
