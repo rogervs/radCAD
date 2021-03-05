@@ -62,8 +62,8 @@ class ExecutorGolem(Executor):
     async def main(self):
         package = await vm.repo(
             image_hash="086376ab1d5b7e9c2ae4026d2bea5ea6e612c31a6fcc24cc347c726a",
-            min_mem_gib=0.5,
-            min_storage_gib=2.0,
+            min_mem_gib=self.engine.golem_mem[0],
+            min_storage_gib=self.engine.golem_storage[0]
         )
 
         async def worker(ctx: WorkContext, tasks):
@@ -124,6 +124,7 @@ class ExecutorGolem(Executor):
         # By passing `event_consumer=log_summary()` we enable summary logging.
         # See the documentation of the `yapapi.log` module on how to set
         # the level of detail and format of the logged information.
+
 
         async with g_Executor(
             package=package,
@@ -214,6 +215,7 @@ class ExecutorGolem(Executor):
                 f"See {handbook_url} on how to initialize payment accounts for a requestor node."
                 f"{TEXT_COLOR_DEFAULT}"
             )
+            [x.unlink() for x in pickle_dir.iterdir()]
         except KeyboardInterrupt:
             print(
                 f"{TEXT_COLOR_YELLOW}"
@@ -222,6 +224,7 @@ class ExecutorGolem(Executor):
                 f"{TEXT_COLOR_DEFAULT}"
             )
             task.cancel()
+            [x.unlink() for x in pickle_dir.iterdir()]
             try:
                 loop.run_until_complete(task)
                 print(
@@ -233,4 +236,5 @@ class ExecutorGolem(Executor):
             results = []
             for result_file in output_files:
                 results.extend(dill.load(result_file.open('rb')))
+            [x.unlink() for x in pickle_dir.iterdir()]
             return results

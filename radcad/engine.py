@@ -35,6 +35,8 @@ class Engine:
             else:
                 self.golem_nodes = golem_conf.pop('NODES', 5)
                 self.golem_backend = golem_conf.pop('REMOTE_BACKEND', Backend.SINGLE_PROCESS).value,
+                self.golem_mem = golem_conf.pop('MEMORY', 0.5),
+                self.golem_storage = golem_conf.pop('STORAGE', 2.0),
                 self.golem_bundles = golem_conf.pop('BUNDLES', self.golem_nodes)
                 self.golem_budget = golem_conf.pop('BUDGET', 10)
                 self.golem_subnet_tag = golem_conf.pop('SUBNET_TAG', 'community.4')
