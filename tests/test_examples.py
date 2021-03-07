@@ -17,3 +17,5 @@ def test_predator_prey_abm():
 def test_harmonic_oscillator():
     assert check_notebook("examples/harmonic_oscillator/harmonic_oscillator.ipynb")
 
+def test_predator_prey_sd_golem():
+    assert check_notebook("examples/predator_prey_sd_golem/predator-prey-sd-golem.ipynb")
