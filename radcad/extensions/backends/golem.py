@@ -39,6 +39,7 @@ remote_pickle_in = pathlib.Path('/golem/resource/radcad.prep')
 remote_pickle_out = pathlib.Path('/golem/output/radcad.output')
 
 golem_exec_local = script_dir / 'golem/radcad_remote_agent.py'
+print(golem_exec_local)
 golem_exec_remote = '/golem/work/radcad_remote_agent.py'
 
 
