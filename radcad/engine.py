@@ -33,7 +33,7 @@ class Engine:
             except KeyError:
                 raise KeyError("golem_conf dictionary is required when the GOLEM backend is selected")
             else:
-                self.golem_nodes = golem_conf.pop('NODES', 5)
+                self.golem_nodes = golem_conf.pop('NODES', 3)
                 self.golem_backend = golem_conf.pop('REMOTE_BACKEND', Backend.SINGLE_PROCESS).value,
                 self.golem_mem = golem_conf.pop('MEMORY', 0.5),
                 self.golem_storage = golem_conf.pop('STORAGE', 2.0),
