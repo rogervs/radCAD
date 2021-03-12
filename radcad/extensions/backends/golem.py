@@ -62,7 +62,7 @@ class ExecutorGolem(Executor):
 
     async def main(self):
         package = await vm.repo(
-            image_hash="086376ab1d5b7e9c2ae4026d2bea5ea6e612c31a6fcc24cc347c726a",
+            image_hash="058a6058e3614ee2f7b6ec6503ff6e9e78ff5a610c074927ccffdafd",
             min_mem_gib=self.engine.golem_mem[0],
             min_storage_gib=self.engine.golem_storage[0]
         )
