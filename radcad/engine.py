@@ -39,7 +39,7 @@ class Engine:
                 self.golem_storage = golem_conf.pop('STORAGE', 2.0),
                 self.golem_bundles = golem_conf.pop('BUNDLES', self.golem_nodes)
                 self.golem_budget = golem_conf.pop('BUDGET', 10)
-                self.golem_subnet_tag = golem_conf.pop('SUBNET_TAG', 'community.4')
+                self.golem_subnet_tag = golem_conf.pop('SUBNET_TAG', 'devnet-beta.1')
                 self.golem_driver = golem_conf.pop('PAYMENT_DRIVER', 'zksync')
                 self.golem_network = golem_conf.pop('NETWORK', 'rinkeby')
                 self.golem_timeout = golem_conf.pop('TIMEOUT', 2)
